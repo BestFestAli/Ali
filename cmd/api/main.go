@@ -22,6 +22,7 @@ type application struct {
 }
 
 func main() {
+
 	var cfg config
 
 	flag.IntVar(&cfg.port, "port", 4000, "API server port")
@@ -39,11 +40,11 @@ func main() {
 	mux.HandleFunc("/v1/healthcheck", app.healthcheckHandler)
 
 	srv := &http.Server{
-		Addr:         fmt.Sprintf("%d", cfg.port),
+		Addr:         fmt.Sprintf(":%d", cfg.port),
 		Handler:      mux,
+		IdleTimeout:  time.Minute,
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 30 * time.Second,
-		IdleTimeout:  time.Minute,
 	}
 
 	logger.Printf("starting %s server on %s", cfg.env, srv.Addr)
