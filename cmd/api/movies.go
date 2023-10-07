@@ -2,6 +2,7 @@ package main
 
 import (
 	"awesomeProject3/internal/data"
+	"awesomeProject3/internal/validator"
 	"fmt"
 	"net/http"
 	"time"
@@ -10,10 +11,10 @@ import (
 func (app *application) createMovieHandler(w http.ResponseWriter, r *http.Request) {
 
 	var input struct {
-		Title   string   `json:"title" `
-		Year    int32    `json:"year" `
-		Runtime int32    `json:"runtime" `
-		Genres  []string `json:"genres" `
+		Title   string       `json:"title" `
+		Year    int32        `json:"year" `
+		Runtime data.Runtime `json:"runtime" `
+		Genres  []string     `json:"genres" `
 	}
 
 	err := app.readJSON(w, r, &input)
@@ -22,6 +23,19 @@ func (app *application) createMovieHandler(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
+	movie := &data.Movie{
+		Title:   input.Title,
+		Year:    input.Year,
+		Runtime: input.Runtime,
+		Genres:  input.Genres,
+	}
+
+	v := validator.New()
+
+	if data.ValidateMovie(v, movie); !v.Valid() {
+		app.failedValidationResponse(w, r, v.Errors)
+		return
+	}
 	fmt.Fprintf(w, "%+v\n", input)
 }
 
