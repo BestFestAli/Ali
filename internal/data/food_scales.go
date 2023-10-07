@@ -6,15 +6,16 @@ import (
 )
 
 type FoodScales struct {
-	Model       string  `json:"model" `
-	SpecialCode int64   `json:"code"`
-	Price       int32   `json:"price"`
-	Year        int32   `json:"year,omitempty" `
-	Dimensions  []int32 `json:"dimensions,omitempty" `
-	Runtime     Runtime `json:"runtime,omitempty" `
+	ServerID    int64     `json:"serverID"`
+	Model       string    `json:"model" `
+	SpecialCode int64     `json:"code"`
+	Price       float32   `json:"price"`
+	Year        int32     `json:"year,omitempty" `
+	Dimensions  []float32 `json:"dimensions,omitempty" `
+	Runtime     Runtime   `json:"runtime,omitempty" `
 }
 
-func ValidateMovie(v *validator.Validator, food_scales *FoodScales) {
+func ValidateFoodScales(v *validator.Validator, food_scales *FoodScales) {
 	v.Check(food_scales.Model != "", "brand", "must be provided")
 	v.Check(len(food_scales.Model) <= 100, "brand", "must not be more than 100 bytes long")
 
