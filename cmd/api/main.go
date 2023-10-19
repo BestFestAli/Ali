@@ -60,15 +60,15 @@ func main() {
 
 	migrationDriver, err := postgres.WithInstance(db, &postgres.Config{})
 	if err != nil {
-		logger.PrintFatal(err, nil)
+		logger.Print(err, nil)
 	}
 	migrator, err := migrate.NewWithDatabaseInstance("C:\\Users\\am429\\GolandProjects\\awesomeProject3\\migrations", "postgres", migrationDriver)
 	if err != nil {
-		logger.PrintFatal(err, nil)
+		logger.Print(err, nil)
 	}
 	err = migrator.Up()
 	if err != nil && err != migrate.ErrNoChange {
-		logger.PrintFatal(err, nil)
+		logger.Print(err, nil)
 	}
 
 	logger.Printf("database migrations applied")
