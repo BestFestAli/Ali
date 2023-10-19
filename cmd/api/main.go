@@ -5,6 +5,9 @@ import (
 	"database/sql"
 	"flag"
 	"fmt"
+	"github.com/golang-migrate/migrate"
+	"github.com/golang-migrate/migrate/database/postgres"
+	_ "github.com/golang-migrate/migrate/source/file"
 	_ "github.com/lib/pq"
 	"log"
 	"net/http"
@@ -51,10 +54,24 @@ func main() {
 	if err != nil {
 		logger.Fatal(err)
 	}
-
 	defer db.Close()
 
 	logger.Printf("database connection pool established")
+
+	migrationDriver, err := postgres.WithInstance(db, &postgres.Config{})
+	if err != nil {
+		logger.PrintFatal(err, nil)
+	}
+	migrator, err := migrate.NewWithDatabaseInstance("C:\\Users\\am429\\GolandProjects\\awesomeProject3\\migrations", "postgres", migrationDriver)
+	if err != nil {
+		logger.PrintFatal(err, nil)
+	}
+	err = migrator.Up()
+	if err != nil && err != migrate.ErrNoChange {
+		logger.PrintFatal(err, nil)
+	}
+
+	logger.Printf("database migrations applied")
 
 	app := &application{
 		config: cfg,
