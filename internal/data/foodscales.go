@@ -159,9 +159,9 @@ func (m FoodScaleModel) Delete(serverID int64) error {
 	return nil
 }
 
-func (m FoodScaleModel) GetAll(model string, filters Filters) ([]*FoodScales, error) {
+func (m FoodScaleModel) GetAll(model string, filters Filters) ([]*FoodScales, Metadata, error) {
 	query := fmt.Sprintf(`
- 		SELECT id, specialcode, model, year, runtime, dimensions, price
+ 		SELECT count(*) OVER(), id, specialcode, model, year, runtime, dimensions, price
  		FROM foodscales
  		WHERE (to_tsvector('simple', model) @@ plainto_tsquery('simple', $1) OR $1 = '') 
  		ORDER BY %s %s, id ASC
@@ -174,16 +174,18 @@ func (m FoodScaleModel) GetAll(model string, filters Filters) ([]*FoodScales, er
 
 	rows, err := m.DB.QueryContext(ctx, query, args)
 	if err != nil {
-		return nil, err
+		return nil, Metadata{}, err
 	}
 
 	defer rows.Close()
 
+	totalRecords := 0
 	foodscales := []*FoodScales{}
 
 	for rows.Next() {
 		var foodscale FoodScales
 		err := rows.Scan(
+			&totalRecords,
 			&foodscale.ServerID,
 			&foodscale.SpecialCode,
 			&foodscale.Model,
@@ -193,16 +195,17 @@ func (m FoodScaleModel) GetAll(model string, filters Filters) ([]*FoodScales, er
 			&foodscale.Price,
 		)
 		if err != nil {
-			return nil, err
+			return nil, Metadata{}, err
 		}
 
 		foodscales = append(foodscales, &foodscale)
 	}
-	// When the rows.Next() loop has finished, call rows.Err() to retrieve any error
-	// that was encountered during the iteration.
+
 	if err = rows.Err(); err != nil {
-		return nil, err
+		return nil, Metadata{}, err
 	}
-	// If everything went OK, then return the slice of movies.
-	return foodscales, nil
+
+	metadata := calculateMetadata(totalRecords, filters.Page, filters.PageSize)
+
+	return foodscales, metadata, nil
 }

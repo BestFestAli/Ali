@@ -192,13 +192,13 @@ func (app *application) listFoodScalesHandler(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	foodscales, err := app.models.Foodscales.GetAll(input.Model, input.Filters)
+	foodscales, metadata, err := app.models.Foodscales.GetAll(input.Model, input.Filters)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 		return
 	}
 
-	err = app.writeJSON(w, http.StatusOK, envelope{"foodscales": foodscales}, nil)
+	err = app.writeJSON(w, http.StatusOK, envelope{"foodscales": foodscales, "metadata": metadata}, nil)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 	}
