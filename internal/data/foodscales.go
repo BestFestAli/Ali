@@ -54,8 +54,8 @@ func (m FoodScaleModel) Insert(foodscale *FoodScales) error {
 
 }
 
-func (m FoodScaleModel) Get(id int64) (*FoodScales, error) {
-	if id < 1 {
+func (m FoodScaleModel) Get(serverID int64) (*FoodScales, error) {
+	if serverID < 1 {
 		return nil, ErrRecordNotFound
 	}
 
@@ -66,7 +66,7 @@ func (m FoodScaleModel) Get(id int64) (*FoodScales, error) {
 
 	var foodscales FoodScales
 
-	err := m.DB.QueryRow(query, id).Scan(
+	err := m.DB.QueryRow(query, serverID).Scan(
 		&foodscales.ServerID,
 		&foodscales.SpecialCode,
 		&foodscales.Model,
@@ -84,7 +84,7 @@ func (m FoodScaleModel) Get(id int64) (*FoodScales, error) {
 			return nil, err
 		}
 	}
-	// Otherwise, return a pointer to the Movie struct.
+
 	return &foodscales, nil
 
 }
@@ -95,7 +95,7 @@ func (m FoodScaleModel) Update(foodscales *FoodScales) error {
  		SET model = $1, year = $2, runtime = $3, dimensions = $4, specialcode = specialcode + 101
  		WHERE id = $5
  		RETURNING specialcode `
-	// Create an args slice containing the values for the placeholder parameters.
+
 	args := []interface{}{
 		foodscales.Model,
 		foodscales.Year,
@@ -108,6 +108,28 @@ func (m FoodScaleModel) Update(foodscales *FoodScales) error {
 
 }
 
-func (m FoodScaleModel) Delete(id int64) error {
+func (m FoodScaleModel) Delete(serverID int64) error {
+	if serverID < 1 {
+		return ErrRecordNotFound
+	}
+
+	query := `
+		DELETE FROM foodscales
+ 		WHERE id = $1 `
+
+	result, err := m.DB.Exec(query, serverID)
+	if err != nil {
+		return err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if rowsAffected == 0 {
+		return ErrRecordNotFound
+	}
+
 	return nil
 }
