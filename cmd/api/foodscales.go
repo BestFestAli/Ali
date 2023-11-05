@@ -152,8 +152,7 @@ func (app *application) deleteFoodScalesHandler(w http.ResponseWriter, r *http.R
 		app.notFoundResponse(w, r)
 		return
 	}
-	// Delete the movie from the database, sending a 404 Not Found response to the
-	// client if there isn't a matching record.
+
 	err = app.models.Foodscales.Delete(serverID)
 	if err != nil {
 		switch {
@@ -164,9 +163,33 @@ func (app *application) deleteFoodScalesHandler(w http.ResponseWriter, r *http.R
 		}
 		return
 	}
-	// Return a 200 OK status code along with a success message.
+
 	err = app.writeJSON(w, http.StatusOK, envelope{"message": "foodscales successfully deleted"}, nil)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 	}
+}
+
+func (app *application) listFoodScalesHandler(w http.ResponseWriter, r *http.Request) {
+
+	var input struct {
+		Model string
+		data.Filters
+	}
+	v := validator.New()
+	qs := r.URL.Query()
+
+	input.Model = app.readString(qs, "model", "")
+
+	input.Filters.Page = app.readInt(qs, "page", 1, v)
+	input.Filters.PageSize = app.readInt(qs, "page_size", 20, v)
+
+	input.Filters.Sort = app.readString(qs, "sort", "serverID")
+
+	if !v.Valid() {
+		app.failedValidationResponse(w, r, v.Errors)
+		return
+	}
+	// Dump the contents of the input struct in a HTTP response.
+	fmt.Fprintf(w, "%+v\n", input)
 }
