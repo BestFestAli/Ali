@@ -3,6 +3,7 @@ package data
 import (
 	"awesomeProject3/internal/validator"
 	"database/sql"
+	"github.com/lib/pq"
 	"time"
 )
 
@@ -40,8 +41,16 @@ type FoodScaleModel struct {
 	DB *sql.DB
 }
 
-func (m FoodScaleModel) Insert(foodscales *FoodScales) error {
-	return nil
+func (m FoodScaleModel) Insert(foodscale *FoodScales) error {
+	query := `
+ 		INSERT INTO FoodScales (model, year, runtime, dimensions) 
+		VALUES ($1, $2, $3, $4)
+ 		RETURNING id, code, price `
+
+	args := []interface{}{foodscale.Model, foodscale.Year, foodscale.Runtime, pq.Array(foodscale.Dimensions)}
+
+	return m.DB.QueryRow(query, args...).Scan(&foodscale.ServerID, &foodscale.SpecialCode, &foodscale.Price)
+
 }
 
 func (m FoodScaleModel) Get(id int64) (*FoodScales, error) {

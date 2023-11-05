@@ -14,7 +14,7 @@ func (app *application) routes() *httprouter.Router {
 	router.MethodNotAllowed = http.HandlerFunc(app.methodNotAllowedResponse)
 
 	router.HandlerFunc(http.MethodGet, "/v1/healthcheck", app.healthcheckHandler)
-	router.HandlerFunc(http.MethodPost, "/v1/scales", app.newFoodScalesHandler)
+	router.HandlerFunc(http.MethodPost, "/v1/foodscales", app.newFoodScalesHandler)
 	router.HandlerFunc(http.MethodGet, "/v1/scales/:serverID", app.showFoodScalesHandler)
 
 	return router

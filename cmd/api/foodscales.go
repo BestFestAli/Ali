@@ -24,22 +24,33 @@ func (app *application) newFoodScalesHandler(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	foodscales := &data.FoodScales{
-		Model:       input.Model,
-		SpecialCode: input.SpecialCode,
-		Price:       input.Price,
-		Year:        input.Year,
-		Dimensions:  input.Dimensions,
-		Runtime:     input.Runtime,
+	foodscale := &data.FoodScales{
+		Model:      input.Model,
+		Year:       input.Year,
+		Runtime:    input.Runtime,
+		Dimensions: input.Dimensions,
 	}
 
 	v := validator.New()
 
-	if data.ValidateFoodScales(v, foodscales); !v.Valid() {
+	if data.ValidateFoodScales(v, foodscale); !v.Valid() {
 		app.failedValidationResponse(w, r, v.Errors)
 		return
 	}
-	fmt.Fprintf(w, "%+v\n", input)
+	err = app.models.Foodscales.Insert(foodscale)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+		return
+	}
+
+	headers := make(http.Header)
+	headers.Set("Location", fmt.Sprintf("/v1/foodscales/%d", foodscale.ServerID))
+
+	err = app.writeJSON(w, http.StatusCreated, envelope{"foodscale": foodscale}, headers)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+	}
+
 }
 
 func (app *application) showFoodScalesHandler(w http.ResponseWriter, r *http.Request) {
