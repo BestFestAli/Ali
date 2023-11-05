@@ -90,7 +90,22 @@ func (m FoodScaleModel) Get(id int64) (*FoodScales, error) {
 }
 
 func (m FoodScaleModel) Update(foodscales *FoodScales) error {
-	return nil
+	query := `
+ 		UPDATE movies 
+ 		SET model = $1, year = $2, runtime = $3, dimensions = $4, specialcode = specialcode + 101
+ 		WHERE id = $5
+ 		RETURNING specialcode `
+	// Create an args slice containing the values for the placeholder parameters.
+	args := []interface{}{
+		foodscales.Model,
+		foodscales.Year,
+		foodscales.Runtime,
+		pq.Array(foodscales.Dimensions),
+		foodscales.ServerID,
+	}
+
+	return m.DB.QueryRow(query, args...).Scan(&foodscales.SpecialCode)
+
 }
 
 func (m FoodScaleModel) Delete(id int64) error {

@@ -45,7 +45,7 @@ func (app *application) newFoodScalesHandler(w http.ResponseWriter, r *http.Requ
 	}
 
 	headers := make(http.Header)
-	headers.Set("Location", fmt.Sprintf("/v1/foodscales/%d", foodscale.ServerID))
+	headers.Set("Location", fmt.Sprintf("/v1/scales/%d", foodscale.ServerID))
 
 	err = app.writeJSON(w, http.StatusCreated, envelope{"foodscale": foodscale}, headers)
 	if err != nil {
@@ -69,6 +69,60 @@ func (app *application) showFoodScalesHandler(w http.ResponseWriter, r *http.Req
 		default:
 			app.serverErrorResponse(w, r, err)
 		}
+		return
+	}
+
+	err = app.writeJSON(w, http.StatusOK, envelope{"foodscales": foodscales}, nil)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+	}
+}
+
+func (app *application) updateFoodScalesHandler(w http.ResponseWriter, r *http.Request) {
+	ServerID, err := app.readIDParam(r)
+	if err != nil {
+		app.notFoundResponse(w, r)
+		return
+	}
+
+	foodscales, err := app.models.Foodscales.Get(ServerID)
+	if err != nil {
+		switch {
+		case errors.Is(err, data.ErrRecordNotFound):
+			app.notFoundResponse(w, r)
+		default:
+			app.serverErrorResponse(w, r, err)
+		}
+		return
+	}
+
+	var input struct {
+		Model      string       `json:"model" `
+		Year       int32        `json:"year" `
+		Runtime    data.Runtime `json:"runtime" `
+		Dimensions []float32    `json:"dimensions" `
+	}
+
+	err = app.readJSON(w, r, &input)
+	if err != nil {
+		app.badRequestResponse(w, r, err)
+		return
+	}
+
+	foodscales.Model = input.Model
+	foodscales.Year = input.Year
+	foodscales.Runtime = input.Runtime
+	foodscales.Dimensions = input.Dimensions
+
+	v := validator.New()
+	if data.ValidateFoodScales(v, foodscales); !v.Valid() {
+		app.failedValidationResponse(w, r, v.Errors)
+		return
+	}
+
+	err = app.models.Foodscales.Update(foodscales)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
 		return
 	}
 
