@@ -2,6 +2,7 @@ package data
 
 import (
 	"awesomeProject3/internal/validator"
+	"database/sql"
 	"time"
 )
 
@@ -33,4 +34,24 @@ func ValidateFoodScales(v *validator.Validator, foodscales *FoodScales) {
 
 	v.Check(foodscales.Price != 0, "price", "must be provided")
 	v.Check(foodscales.Price <= 1000, "price", "must be cheaper than 1000")
+}
+
+type FoodScaleModel struct {
+	DB *sql.DB
+}
+
+func (m FoodScaleModel) Insert(foodscales *FoodScales) error {
+	return nil
+}
+
+func (m FoodScaleModel) Get(id int64) (*FoodScales, error) {
+	return nil, nil
+}
+
+func (m FoodScaleModel) Update(foodscales *FoodScales) error {
+	return nil
+}
+
+func (m FoodScaleModel) Delete(id int64) error {
+	return nil
 }
