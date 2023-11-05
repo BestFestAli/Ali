@@ -3,6 +3,7 @@ package main
 import (
 	"awesomeProject3/internal/data"
 	"awesomeProject3/internal/validator"
+	"errors"
 	"fmt"
 	"net/http"
 )
@@ -54,20 +55,21 @@ func (app *application) newFoodScalesHandler(w http.ResponseWriter, r *http.Requ
 }
 
 func (app *application) showFoodScalesHandler(w http.ResponseWriter, r *http.Request) {
-	serverID, err := app.readIDParam(r)
+	ServerID, err := app.readIDParam(r)
 	if err != nil {
 		app.notFoundResponse(w, r)
 		return
 	}
 
-	foodscales := &data.FoodScales{
-		ServerID:    serverID,
-		Model:       "Escali Primo Digital Scale",
-		SpecialCode: 2204211300,
-		Price:       15,
-		Year:        2022,
-		Dimensions:  []float32{8.5, 6, 1.5},
-		Runtime:     102,
+	foodscales, err := app.models.Foodscales.Get(ServerID)
+	if err != nil {
+		switch {
+		case errors.Is(err, data.ErrRecordNotFound):
+			app.notFoundResponse(w, r)
+		default:
+			app.serverErrorResponse(w, r, err)
+		}
+		return
 	}
 
 	err = app.writeJSON(w, http.StatusOK, envelope{"foodscales": foodscales}, nil)

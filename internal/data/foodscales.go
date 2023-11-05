@@ -3,6 +3,7 @@ package data
 import (
 	"awesomeProject3/internal/validator"
 	"database/sql"
+	"errors"
 	"github.com/lib/pq"
 	"time"
 )
@@ -54,7 +55,38 @@ func (m FoodScaleModel) Insert(foodscale *FoodScales) error {
 }
 
 func (m FoodScaleModel) Get(id int64) (*FoodScales, error) {
-	return nil, nil
+	if id < 1 {
+		return nil, ErrRecordNotFound
+	}
+
+	query := `
+ 		SELECT id, code, model, year, runtime, dimensions, price
+ 		FROM FoodScales
+ 		WHERE id = $1 `
+
+	var foodscales FoodScales
+
+	err := m.DB.QueryRow(query, id).Scan(
+		&foodscales.ServerID,
+		&foodscales.SpecialCode,
+		&foodscales.Model,
+		&foodscales.Year,
+		&foodscales.Runtime,
+		pq.Array(&foodscales.Dimensions),
+		&foodscales.Price,
+	)
+
+	if err != nil {
+		switch {
+		case errors.Is(err, sql.ErrNoRows):
+			return nil, ErrRecordNotFound
+		default:
+			return nil, err
+		}
+	}
+	// Otherwise, return a pointer to the Movie struct.
+	return &foodscales, nil
+
 }
 
 func (m FoodScaleModel) Update(foodscales *FoodScales) error {
