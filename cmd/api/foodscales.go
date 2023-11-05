@@ -97,10 +97,10 @@ func (app *application) updateFoodScalesHandler(w http.ResponseWriter, r *http.R
 	}
 
 	var input struct {
-		Model      string       `json:"model" `
-		Year       int32        `json:"year" `
-		Runtime    data.Runtime `json:"runtime" `
-		Dimensions []float32    `json:"dimensions" `
+		Model      *string       `json:"model" `
+		Year       *int32        `json:"year" `
+		Runtime    *data.Runtime `json:"runtime" `
+		Dimensions []float32     `json:"dimensions" `
 	}
 
 	err = app.readJSON(w, r, &input)
@@ -109,10 +109,18 @@ func (app *application) updateFoodScalesHandler(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	foodscales.Model = input.Model
-	foodscales.Year = input.Year
-	foodscales.Runtime = input.Runtime
-	foodscales.Dimensions = input.Dimensions
+	if input.Model != nil {
+		foodscales.Model = *input.Model
+	}
+	if input.Year != nil {
+		foodscales.Year = *input.Year
+	}
+	if input.Runtime != nil {
+		foodscales.Runtime = *input.Runtime
+	}
+	if input.Dimensions != nil {
+		foodscales.Dimensions = input.Dimensions
+	}
 
 	v := validator.New()
 	if data.ValidateFoodScales(v, foodscales); !v.Valid() {
