@@ -157,3 +157,47 @@ func (m FoodScaleModel) Delete(serverID int64) error {
 
 	return nil
 }
+
+func (m FoodScaleModel) GetAll(model string, filters Filters) ([]*FoodScales, error) {
+	query := `
+ 		SELECT id, code, model, year, runtime, dimensions, price
+ 		FROM foodscales
+ 		ORDER BY id `
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	rows, err := m.DB.QueryContext(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	foodscales := []*FoodScales{}
+
+	for rows.Next() {
+		var foodscale FoodScales
+		err := rows.Scan(
+			&foodscale.ServerID,
+			&foodscale.SpecialCode,
+			&foodscale.Model,
+			&foodscale.Year,
+			&foodscale.Runtime,
+			pq.Array(&foodscale.Dimensions),
+			&foodscale.Price,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		foodscales = append(foodscales, &foodscale)
+	}
+	// When the rows.Next() loop has finished, call rows.Err() to retrieve any error
+	// that was encountered during the iteration.
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+	// If everything went OK, then return the slice of movies.
+	return foodscales, nil
+}
