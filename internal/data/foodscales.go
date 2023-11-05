@@ -5,6 +5,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 	"github.com/lib/pq"
 	"time"
 )
@@ -159,11 +160,11 @@ func (m FoodScaleModel) Delete(serverID int64) error {
 }
 
 func (m FoodScaleModel) GetAll(model string, filters Filters) ([]*FoodScales, error) {
-	query := `
+	query := fmt.Sprintf(`
  		SELECT id, code, model, year, runtime, dimensions, price
  		FROM foodscales
  		WHERE (to_tsvector('simple', model) @@ plainto_tsquery('simple', $1) OR $1 = '') 
- 		ORDER BY id `
+ 		ORDER BY %s %s id ASC`, filters.sortColumn(), filters.sortDirection())
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
