@@ -185,11 +185,12 @@ func (app *application) listFoodScalesHandler(w http.ResponseWriter, r *http.Req
 	input.Filters.PageSize = app.readInt(qs, "page_size", 20, v)
 
 	input.Filters.Sort = app.readString(qs, "sort", "serverID")
+	input.Filters.SortSafelist = []string{"serverID", "model", "year", "runtime", "-serverID", "-model", "-year", "-runtime"}
 
-	if !v.Valid() {
+	if data.ValidateFilters(v, input.Filters); !v.Valid() {
 		app.failedValidationResponse(w, r, v.Errors)
 		return
 	}
-	// Dump the contents of the input struct in a HTTP response.
+
 	fmt.Fprintf(w, "%+v\n", input)
 }
