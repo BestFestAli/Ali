@@ -162,7 +162,7 @@ func (m FoodScaleModel) GetAll(model string, filters Filters) ([]*FoodScales, er
 	query := `
  		SELECT id, code, model, year, runtime, dimensions, price
  		FROM foodscales
- 		WHERE (LOWER(model) = LOWER($1) OR $1 = '')
+ 		WHERE (to_tsvector('simple', model) @@ plainto_tsquery('simple', $1) OR $1 = '') 
  		ORDER BY id `
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
