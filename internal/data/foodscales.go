@@ -2,6 +2,7 @@ package data
 
 import (
 	"awesomeProject3/internal/validator"
+	"context"
 	"database/sql"
 	"errors"
 	"github.com/lib/pq"
@@ -50,7 +51,10 @@ func (m FoodScaleModel) Insert(foodscale *FoodScales) error {
 
 	args := []interface{}{foodscale.Model, foodscale.Year, foodscale.Runtime, pq.Array(foodscale.Dimensions)}
 
-	return m.DB.QueryRow(query, args...).Scan(&foodscale.ServerID, &foodscale.SpecialCode, &foodscale.Price)
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	return m.DB.QueryRowContext(ctx, query, args...).Scan(&foodscale.ServerID, &foodscale.SpecialCode, &foodscale.Price)
 
 }
 
@@ -66,7 +70,11 @@ func (m FoodScaleModel) Get(serverID int64) (*FoodScales, error) {
 
 	var foodscales FoodScales
 
-	err := m.DB.QueryRow(query, serverID).Scan(
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+
+	defer cancel()
+
+	err := m.DB.QueryRowContext(ctx, query, serverID).Scan(
 		&foodscales.ServerID,
 		&foodscales.SpecialCode,
 		&foodscales.Model,
@@ -93,7 +101,7 @@ func (m FoodScaleModel) Update(foodscales *FoodScales) error {
 	query := `
  		UPDATE movies 
  		SET model = $1, year = $2, runtime = $3, dimensions = $4, specialcode = specialcode + 101
- 		WHERE id = $5
+ 		WHERE id = $5 AND specialcode = $6
  		RETURNING specialcode `
 
 	args := []interface{}{
@@ -102,9 +110,22 @@ func (m FoodScaleModel) Update(foodscales *FoodScales) error {
 		foodscales.Runtime,
 		pq.Array(foodscales.Dimensions),
 		foodscales.ServerID,
+		foodscales.SpecialCode,
 	}
 
-	return m.DB.QueryRow(query, args...).Scan(&foodscales.SpecialCode)
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	err := m.DB.QueryRowContext(ctx, query, args...).Scan(&foodscales.SpecialCode)
+	if err != nil {
+		switch {
+		case errors.Is(err, sql.ErrNoRows):
+			return ErrEditConflict
+		default:
+			return err
+		}
+	}
+	return nil
 
 }
 
@@ -117,7 +138,10 @@ func (m FoodScaleModel) Delete(serverID int64) error {
 		DELETE FROM foodscales
  		WHERE id = $1 `
 
-	result, err := m.DB.Exec(query, serverID)
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	result, err := m.DB.ExecContext(ctx, query, serverID)
 	if err != nil {
 		return err
 	}

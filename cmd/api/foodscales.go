@@ -130,7 +130,12 @@ func (app *application) updateFoodScalesHandler(w http.ResponseWriter, r *http.R
 
 	err = app.models.Foodscales.Update(foodscales)
 	if err != nil {
-		app.serverErrorResponse(w, r, err)
+		switch {
+		case errors.Is(err, data.ErrEditConflict):
+			app.editConflictResponse(w, r)
+		default:
+			app.serverErrorResponse(w, r, err)
+		}
 		return
 	}
 
