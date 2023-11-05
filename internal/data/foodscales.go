@@ -161,15 +161,18 @@ func (m FoodScaleModel) Delete(serverID int64) error {
 
 func (m FoodScaleModel) GetAll(model string, filters Filters) ([]*FoodScales, error) {
 	query := fmt.Sprintf(`
- 		SELECT id, code, model, year, runtime, dimensions, price
+ 		SELECT id, specialcode, model, year, runtime, dimensions, price
  		FROM foodscales
  		WHERE (to_tsvector('simple', model) @@ plainto_tsquery('simple', $1) OR $1 = '') 
- 		ORDER BY %s %s id ASC`, filters.sortColumn(), filters.sortDirection())
+ 		ORDER BY %s %s, id ASC
+ 		LIMIT $3 OFFSET $4`, filters.sortColumn(), filters.sortDirection())
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	rows, err := m.DB.QueryContext(ctx, query, model)
+	args := []interface{}{model, filters.limit(), filters.offset()}
+
+	rows, err := m.DB.QueryContext(ctx, query, args)
 	if err != nil {
 		return nil, err
 	}
