@@ -12,7 +12,7 @@ import (
 type Level int8
 
 const (
-	LevelInfo  Level = iota
+	LevelInfo Level = iota
 	LevelError
 	LevelFatal
 	LevelOff
@@ -85,7 +85,7 @@ func (l *Logger) print(level Level, message string, properties map[string]string
 	}
 
 	l.mu.Lock()
-	defer l.mu.Unlock().
+	defer l.mu.Unlock()
 	return l.out.Write(append(line, '\n'))
 }
 
