@@ -5,7 +5,7 @@ import (
 	"net/http"
 )
 
-func (app *application) routes() *http.Handler {
+func (app *application) routes() http.Handler {
 
 	router := httprouter.New()
 
@@ -20,6 +20,6 @@ func (app *application) routes() *http.Handler {
 	router.HandlerFunc(http.MethodPatch, "/v1/scales/:serverID", app.updateFoodScalesHandler)
 	router.HandlerFunc(http.MethodDelete, "/v1/scales/:serverID", app.deleteFoodScalesHandler)
 
-	return app.recoverPanic(router)
+	return app.recoverPanic(app.rateLimit(router))
 
 }
