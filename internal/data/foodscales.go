@@ -11,33 +11,33 @@ import (
 )
 
 type FoodScales struct {
-	ServerID    int64     `json:"serverID"`
-	Model       string    `json:"model" `
-	SpecialCode int64     `json:"code"`
-	Price       float32   `json:"price"`
-	Year        int32     `json:"year,omitempty" `
-	Dimensions  []float32 `json:"dimensions,omitempty" `
-	Runtime     Runtime   `json:"runtime,omitempty" `
+	Model      string    `json:"model" `
+	ID         int64     `json:"id"`
+	Price      float32   `json:"price"`
+	Year       int32     `json:"year,omitempty" `
+	Dimensions []float32 `json:"dimensions,omitempty" `
+	Runtime    Runtime   `json:"runtime,omitempty" `
+	Version    int32     `json:"version"`
 }
 
-func ValidateFoodScales(v *validator.Validator, foodscales *FoodScales) {
-	v.Check(foodscales.Model != "", "brand", "must be provided")
-	v.Check(len(foodscales.Model) <= 100, "brand", "must not be more than 100 bytes long")
+func ValidateFoodScales(v *validator.Validator, foodscale *FoodScales) {
+	v.Check(foodscale.Model != "", "brand", "must be provided")
+	v.Check(len(foodscale.Model) <= 100, "brand", "must not be more than 100 bytes long")
 
-	v.Check(foodscales.SpecialCode != 0, "code", "must be provided")
+	v.Check(foodscale.Version != 0, "code", "must be provided")
 
-	v.Check(foodscales.Year != 0, "year", "must be provided")
-	v.Check(foodscales.Year >= 2000, "year", "must be greater than 2000")
-	v.Check(foodscales.Year <= int32(time.Now().Year()), "year", "must not be in the future")
+	v.Check(foodscale.Year != 0, "year", "must be provided")
+	v.Check(foodscale.Year >= 2000, "year", "must be greater than 2000")
+	v.Check(foodscale.Year <= int32(time.Now().Year()), "year", "must not be in the future")
 
-	v.Check(foodscales.Runtime != 0, "runtime", "must be provided")
-	v.Check(foodscales.Runtime > 0, "runtime", "must be a positive integer")
+	v.Check(foodscale.Runtime != 0, "runtime", "must be provided")
+	v.Check(foodscale.Runtime > 0, "runtime", "must be a positive integer")
 
-	v.Check(foodscales.Dimensions != nil, "dimensions", "must be provided")
-	v.Check(len(foodscales.Dimensions) == 3, "genres", "must contain at only 3 numbers for size")
+	v.Check(foodscale.Dimensions != nil, "dimensions", "must be provided")
+	v.Check(len(foodscale.Dimensions) == 3, "genres", "must contain at only 3 numbers for size")
 
-	v.Check(foodscales.Price != 0, "price", "must be provided")
-	v.Check(foodscales.Price <= 1000, "price", "must be cheaper than 1000")
+	v.Check(foodscale.Price != 0, "price", "must be provided")
+	v.Check(foodscale.Price <= 1000, "price", "must be cheaper than 1000")
 }
 
 type FoodScaleModel struct {
@@ -46,27 +46,27 @@ type FoodScaleModel struct {
 
 func (m FoodScaleModel) Insert(foodscale *FoodScales) error {
 	query := `
- 		INSERT INTO FoodScales (model, year, runtime, dimensions) 
+ 		INSERT INTO "FoodScales" (model, year, runtime, dimensions) 
 		VALUES ($1, $2, $3, $4)
- 		RETURNING id, code, price `
+ 		RETURNING id, price, version`
 
 	args := []interface{}{foodscale.Model, foodscale.Year, foodscale.Runtime, pq.Array(foodscale.Dimensions)}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	return m.DB.QueryRowContext(ctx, query, args...).Scan(&foodscale.ServerID, &foodscale.SpecialCode, &foodscale.Price)
+	return m.DB.QueryRowContext(ctx, query, args...).Scan(&foodscale.ID, &foodscale.Version, &foodscale.Price)
 
 }
 
-func (m FoodScaleModel) Get(serverID int64) (*FoodScales, error) {
-	if serverID < 1 {
+func (m FoodScaleModel) Get(id int64) (*FoodScales, error) {
+	if id < 1 {
 		return nil, ErrRecordNotFound
 	}
 
 	query := `
- 		SELECT id, code, model, year, runtime, dimensions, price
- 		FROM FoodScales
+ 		SELECT id, model, year, runtime, dimensions, price, version
+ 		FROM "FoodScales"
  		WHERE id = $1 `
 
 	var foodscales FoodScales
@@ -75,14 +75,14 @@ func (m FoodScaleModel) Get(serverID int64) (*FoodScales, error) {
 
 	defer cancel()
 
-	err := m.DB.QueryRowContext(ctx, query, serverID).Scan(
-		&foodscales.ServerID,
-		&foodscales.SpecialCode,
+	err := m.DB.QueryRowContext(ctx, query).Scan(
+		&foodscales.ID,
 		&foodscales.Model,
 		&foodscales.Year,
 		&foodscales.Runtime,
 		pq.Array(&foodscales.Dimensions),
 		&foodscales.Price,
+		&foodscales.Version,
 	)
 
 	if err != nil {
@@ -100,24 +100,24 @@ func (m FoodScaleModel) Get(serverID int64) (*FoodScales, error) {
 
 func (m FoodScaleModel) Update(foodscales *FoodScales) error {
 	query := `
- 		UPDATE movies 
- 		SET model = $1, year = $2, runtime = $3, dimensions = $4, specialcode = specialcode + 101
- 		WHERE id = $5 AND specialcode = $6
- 		RETURNING specialcode `
+ 		UPDATE "FoodScales" 
+ 		SET model = $1, year = $2, runtime = $3, dimensions = $4, version = version + 1
+ 		WHERE id = $5 AND version = $6
+ 		RETURNING version `
 
 	args := []interface{}{
 		foodscales.Model,
 		foodscales.Year,
 		foodscales.Runtime,
 		pq.Array(foodscales.Dimensions),
-		foodscales.ServerID,
-		foodscales.SpecialCode,
+		foodscales.ID,
+		foodscales.Version,
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	err := m.DB.QueryRowContext(ctx, query, args...).Scan(&foodscales.SpecialCode)
+	err := m.DB.QueryRowContext(ctx, query, args...).Scan(&foodscales.Version)
 	if err != nil {
 		switch {
 		case errors.Is(err, sql.ErrNoRows):
@@ -130,19 +130,19 @@ func (m FoodScaleModel) Update(foodscales *FoodScales) error {
 
 }
 
-func (m FoodScaleModel) Delete(serverID int64) error {
-	if serverID < 1 {
+func (m FoodScaleModel) Delete(ID int64) error {
+	if ID < 1 {
 		return ErrRecordNotFound
 	}
 
 	query := `
-		DELETE FROM foodscales
+		DELETE FROM "FoodScales"
  		WHERE id = $1 `
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	result, err := m.DB.ExecContext(ctx, query, serverID)
+	result, err := m.DB.ExecContext(ctx, query, ID)
 	if err != nil {
 		return err
 	}
@@ -161,11 +161,11 @@ func (m FoodScaleModel) Delete(serverID int64) error {
 
 func (m FoodScaleModel) GetAll(model string, filters Filters) ([]*FoodScales, Metadata, error) {
 	query := fmt.Sprintf(`
- 		SELECT count(*) OVER(), id, specialcode, model, year, runtime, dimensions, price
- 		FROM foodscales
+ 		SELECT count(*) OVER(), id, version, model, year, runtime, dimensions, price
+ 		FROM "FoodScales"
  		WHERE (to_tsvector('simple', model) @@ plainto_tsquery('simple', $1) OR $1 = '') 
  		ORDER BY %s %s, id ASC
- 		LIMIT $3 OFFSET $4`, filters.sortColumn(), filters.sortDirection())
+ 		LIMIT $3 OFFSET $4 `, filters.sortColumn(), filters.sortDirection())
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
@@ -186,8 +186,7 @@ func (m FoodScaleModel) GetAll(model string, filters Filters) ([]*FoodScales, Me
 		var foodscale FoodScales
 		err := rows.Scan(
 			&totalRecords,
-			&foodscale.ServerID,
-			&foodscale.SpecialCode,
+			&foodscale.ID,
 			&foodscale.Model,
 			&foodscale.Year,
 			&foodscale.Runtime,

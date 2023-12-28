@@ -1,15 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="DataSourceManagerImpl" format="xml" multifile-model="true">
-    <data-source source="LOCAL" name="kitchen@localhost" uuid="373a7aaa-1de5-4423-8d48-9c587bb41048">
+    <data-source source="LOCAL" name="scales" uuid="aff245f3-78a9-4d56-96b6-9487b78a2c13">
       <driver-ref>postgresql</driver-ref>
       <synchronize>true</synchronize>
       <jdbc-driver>org.postgresql.Driver</jdbc-driver>
-      <jdbc-url>jdbc:postgresql://localhost:5432/postgres</jdbc-url>
+      <jdbc-url>jdbc:postgresql://localhost:5432/scales</jdbc-url>
       <working-dir>$ProjectFileDir$</working-dir>
-      <driver-properties>
-        <property name="sslmode" value="disable" />
-      </driver-properties>
     </data-source>
   </component>
 </project>

@@ -1,1 +1,1 @@
-DROP TABLE IF EXISTS foodscales ;
+DROP TABLE IF EXISTS "FoodScales" ;

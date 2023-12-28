@@ -38,14 +38,14 @@ func (app *application) newFoodScalesHandler(w http.ResponseWriter, r *http.Requ
 		app.failedValidationResponse(w, r, v.Errors)
 		return
 	}
-	err = app.models.Foodscales.Insert(foodscale)
+	err = app.models.FoodScales.Insert(foodscale)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 		return
 	}
 
 	headers := make(http.Header)
-	headers.Set("Location", fmt.Sprintf("/v1/scales/%d", foodscale.ServerID))
+	headers.Set("Location", fmt.Sprintf("/v1/scales/%d", foodscale.ID))
 
 	err = app.writeJSON(w, http.StatusCreated, envelope{"foodscale": foodscale}, headers)
 	if err != nil {
@@ -61,7 +61,7 @@ func (app *application) showFoodScalesHandler(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	foodscales, err := app.models.Foodscales.Get(ServerID)
+	foodscales, err := app.models.FoodScales.Get(ServerID)
 	if err != nil {
 		switch {
 		case errors.Is(err, data.ErrRecordNotFound):
@@ -85,7 +85,7 @@ func (app *application) updateFoodScalesHandler(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	foodscales, err := app.models.Foodscales.Get(ServerID)
+	foodscales, err := app.models.FoodScales.Get(ServerID)
 	if err != nil {
 		switch {
 		case errors.Is(err, data.ErrRecordNotFound):
@@ -128,7 +128,7 @@ func (app *application) updateFoodScalesHandler(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	err = app.models.Foodscales.Update(foodscales)
+	err = app.models.FoodScales.Update(foodscales)
 	if err != nil {
 		switch {
 		case errors.Is(err, data.ErrEditConflict):
@@ -153,7 +153,7 @@ func (app *application) deleteFoodScalesHandler(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	err = app.models.Foodscales.Delete(serverID)
+	err = app.models.FoodScales.Delete(serverID)
 	if err != nil {
 		switch {
 		case errors.Is(err, data.ErrRecordNotFound):
@@ -192,7 +192,7 @@ func (app *application) listFoodScalesHandler(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	foodscales, metadata, err := app.models.Foodscales.GetAll(input.Model, input.Filters)
+	foodscales, metadata, err := app.models.FoodScales.GetAll(input.Model, input.Filters)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 		return

@@ -11,11 +11,11 @@ var (
 )
 
 type Models struct {
-	Foodscales FoodScaleModel
+	FoodScales FoodScaleModel
 }
 
 func NewModels(db *sql.DB) Models {
 	return Models{
-		Foodscales: FoodScaleModel{DB: db},
+		FoodScales: FoodScaleModel{DB: db},
 	}
 }
