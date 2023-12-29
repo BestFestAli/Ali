@@ -13,11 +13,13 @@ var (
 type Models struct {
 	FoodScales FoodScaleModel
 	Users      UserModel
+	Tokens     TokenModel
 }
 
 func NewModels(db *sql.DB) Models {
 	return Models{
 		FoodScales: FoodScaleModel{DB: db},
 		Users:      UserModel{DB: db},
+		Tokens:     TokenModel{DB: db},
 	}
 }
