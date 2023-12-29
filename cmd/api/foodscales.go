@@ -11,12 +11,12 @@ import (
 func (app *application) newFoodScalesHandler(w http.ResponseWriter, r *http.Request) {
 
 	var input struct {
-		Model       string       `json:"model" `
-		SpecialCode int64        `json:"code"`
-		Price       float32      `json:"price"`
-		Year        int32        `json:"year" `
-		Dimensions  []float32    `json:"dimensions" `
-		Runtime     data.Runtime `json:"runtime" `
+		Model      string       `json:"model" `
+		Version    int64        `json:"version"`
+		Price      float32      `json:"price"`
+		Year       int32        `json:"year" `
+		Dimensions []float32    `json:"dimensions" `
+		Runtime    data.Runtime `json:"runtime" `
 	}
 
 	err := app.readJSON(w, r, &input)
@@ -55,13 +55,13 @@ func (app *application) newFoodScalesHandler(w http.ResponseWriter, r *http.Requ
 }
 
 func (app *application) showFoodScalesHandler(w http.ResponseWriter, r *http.Request) {
-	ServerID, err := app.readIDParam(r)
+	id, err := app.readIDParam(r)
 	if err != nil {
 		app.notFoundResponse(w, r)
 		return
 	}
 
-	foodscales, err := app.models.FoodScales.Get(ServerID)
+	foodscales, err := app.models.FoodScales.Get(id)
 	if err != nil {
 		switch {
 		case errors.Is(err, data.ErrRecordNotFound):
@@ -79,13 +79,13 @@ func (app *application) showFoodScalesHandler(w http.ResponseWriter, r *http.Req
 }
 
 func (app *application) updateFoodScalesHandler(w http.ResponseWriter, r *http.Request) {
-	ServerID, err := app.readIDParam(r)
+	id, err := app.readIDParam(r)
 	if err != nil {
 		app.notFoundResponse(w, r)
 		return
 	}
 
-	foodscales, err := app.models.FoodScales.Get(ServerID)
+	foodscales, err := app.models.FoodScales.Get(id)
 	if err != nil {
 		switch {
 		case errors.Is(err, data.ErrRecordNotFound):
@@ -147,13 +147,13 @@ func (app *application) updateFoodScalesHandler(w http.ResponseWriter, r *http.R
 
 func (app *application) deleteFoodScalesHandler(w http.ResponseWriter, r *http.Request) {
 
-	serverID, err := app.readIDParam(r)
+	id, err := app.readIDParam(r)
 	if err != nil {
 		app.notFoundResponse(w, r)
 		return
 	}
 
-	err = app.models.FoodScales.Delete(serverID)
+	err = app.models.FoodScales.Delete(id)
 	if err != nil {
 		switch {
 		case errors.Is(err, data.ErrRecordNotFound):
@@ -184,8 +184,8 @@ func (app *application) listFoodScalesHandler(w http.ResponseWriter, r *http.Req
 	input.Filters.Page = app.readInt(qs, "page", 1, v)
 	input.Filters.PageSize = app.readInt(qs, "page_size", 20, v)
 
-	input.Filters.Sort = app.readString(qs, "sort", "serverID")
-	input.Filters.SortSafelist = []string{"serverID", "model", "year", "runtime", "-serverID", "-model", "-year", "-runtime"}
+	input.Filters.Sort = app.readString(qs, "sort", "id")
+	input.Filters.SortSafelist = []string{"id", "model", "year", "runtime", "-id", "-model", "-year", "-runtime"}
 
 	if data.ValidateFilters(v, input.Filters); !v.Valid() {
 		app.failedValidationResponse(w, r, v.Errors)

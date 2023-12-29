@@ -171,7 +171,7 @@ func (m UserModel) GetForToken(tokenScope, tokenPlaintext string) (*User, error)
 		SELECT "Users".id, "Users".created_at, "Users".name, "Users".email, "Users".password_hash, "Users".activated, "Users".version
  		FROM "Users"
  		INNER JOIN "tokens"
-		ON users.id = "tokens".user_id
+		ON "Users".id = "tokens".user_id
  		WHERE "tokens".hash = $1
  		AND "tokens".scope = $2 
  		AND "tokens".expiry > $3 `
